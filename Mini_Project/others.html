@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Generators</title>
+    <style>
+        :root[data-theme="light"] {
+            --background: #f5f5f7;
+            --accent: #DAA520;  /* Goldenrod */
+            --text: #2c3e50;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --hover-shadow: rgba(205, 92, 92, 0.4);
+            --card-border: rgba(0, 0, 0, 0.1);
+            --card-border-hover: rgba(205, 92, 92, 0.6);
+        }
+
+        :root[data-theme="dark"] {
+            --background: #202020;
+            --accent: #FF7F00;  /* Darker Orange */
+            --text: #f0f0f0;
+            --card-shadow: rgba(255, 255, 255, 0.1);
+            --hover-shadow: rgba(241, 90, 143, 0.6);
+            --card-border: rgba(255, 255, 255, 0.2);
+            --card-border-hover: rgba(241, 90, 143, 0.6);
+            --neon-glow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4), 0 0 40px var(--accent), 0 0 70px var(--accent), 0 0 80px var(--accent), 0 0 100px var(--accent);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .theme-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--card-border);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px var(--hover-shadow);
+        }
+
+        .pattern-container {
+            display: grid;
+            grid-template-columns: repeat(2, 200px);
+            grid-template-rows: repeat(2, 200px);
+            gap: 2rem;
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+            animation-delay: 0.5s;
+        }
+
+        .pattern-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text);
+            box-shadow: 0 8px 16px var(--card-shadow);
+            border: 2px solid var(--card-border);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            padding: 1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .pattern-card:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 12px 20px var(--hover-shadow);
+            color: var(--accent);
+            border-color: var(--card-border-hover);
+        }
+
+        :root[data-theme="dark"] .pattern-card {
+            background-color: rgba(241, 90, 143, 0.1);
+            border-color: var(--card-border);
+        }
+
+        :root[data-theme="dark"] .pattern-card:hover {
+            color: var(--accent);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4), 0 0 1em var(--neon-glow);
+            background-color: rgba(241, 90, 143, 0.2);
+            border-color: var(--card-border-hover);
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .pattern-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 150px);
+                gap: 1rem;
+                padding: 1rem;
+                width: 90%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switch">
+        <span>☀️</span>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+        <span>🌙</span>
+    </div>
+    <a href="/landing-page.html" class="back-button"> < </a>
+    <div class="pattern-container">
+        <a href="#" class="pattern-card">---</a>
+        <a href="#" class="pattern-card">---</a>
+        <a href="#" class="pattern-card">---</a>
+        <a href="#" class="pattern-card">---</a>
+    </div>
+    
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.checked = savedTheme === 'dark';
+
+        themeToggle.addEventListener('change', (e) => {
+            const theme = e.target.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+    </script>
+</body>
+</html>
