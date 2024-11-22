@@ -345,7 +345,7 @@
 
         function checkGuess() {
             if (!words.includes(currentGuess)) {
-                document.getElementById('message').textContent = 'Not in word list';
+                showTemporaryMessage('Not in word list');
                 return;
             }
 
@@ -353,7 +353,7 @@
             const tiles = row.getElementsByClassName('tile');
             const guess = currentGuess.split('');
             const word = currentWord.split('');
-            
+
             // First pass: mark correct letters
             for (let i = 0; i < 5; i++) {
                 if (guess[i] === word[i]) {
@@ -362,11 +362,11 @@
                     guess[i] = null;
                 }
             }
-            
+
             // Second pass: mark present letters
             for (let i = 0; i < 5; i++) {
                 if (guess[i] === null) continue;
-                
+
                 const index = word.indexOf(guess[i]);
                 if (index !== -1) {
                     tiles[i].className = 'tile present';
@@ -380,13 +380,27 @@
                 document.getElementById('message').textContent = 'Congratulations!';
                 gameOver = true;
             } else if (currentRow === 5) {
-                document.getElementById('message').textContent = `Game Over! The word was ${currentWord}`;
+                showTemporaryMessage(`Game Over! The word was ${currentWord}`);
                 gameOver = true;
             } else {
                 currentRow++;
                 currentGuess = '';
             }
         }
+
+        // New function to handle temporary messages
+        function showTemporaryMessage(text) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = text;
+
+            // Only set timeout if it's not a congratulations message
+            if (text !== 'Congratulations!') {
+                setTimeout(() => {
+                    messageElement.textContent = '';
+                }, 1000);
+            }
+        }
+
 
         // Handle keyboard input
         document.addEventListener('keydown', (e) => {
