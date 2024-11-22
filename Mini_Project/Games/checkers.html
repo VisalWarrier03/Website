@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkers Game</title>
+    <style>
+        :root[data-theme="light"] {
+            --background: #f5f5f7;
+            --light-square: #ffffff;
+            --dark-square: #555555;
+            --piece-light: #ffc;
+            --piece-dark: #c44;
+            --highlight: rgba(65, 105, 225, 0.4);
+            --accent: #4169E1;
+            --text: #2c3e50;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --hover-shadow: rgba(65, 105, 225, 0.4);
+        }
+
+        :root[data-theme="dark"] {
+            --background: #202020;
+            --light-square: #404040;
+            --dark-square: #666666;
+            --piece-light: #ffc;
+            --piece-dark: #c44;
+            --highlight: rgba(64, 181, 173, 0.4);
+            --accent: #40B5AD;
+            --text: #f0f0f0;
+            --card-shadow: rgba(255, 255, 255, 0.1);
+            --hover-shadow: rgba(64, 181, 173, 0.6);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background);
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: var(--text);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+
+        .theme-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--accent);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 80px;
+            animation: fadeIn 1s ease-in forwards;
+        }
+
+        .status {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            color: var(--text);
+        }
+
+        .board-container {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 0;
+            box-shadow: 0 8px 16px var(--card-shadow);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .light {
+            background-color: var(--light-square);
+        }
+
+        .dark {
+            background-color: var(--dark-square);
+        }
+
+        .highlight {
+            background-color: var(--highlight);
+        }
+
+        .piece {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 6px var(--card-shadow);
+        }
+
+        .piece:hover {
+            transform: scale(1.1);
+        }
+
+        .piece.light-piece {
+            background-color: var(--piece-light);
+        }
+
+        .piece.dark-piece {
+            background-color: var(--piece-dark);
+        }
+
+        .king {
+            border: 3px solid gold;
+            width: 42px;
+            height: 42px;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/adversarial-games.html" class="back-button">← Back</a>
+    <div class="theme-switch">
+        <span>☀️</span>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+        <span>🌙</span>
+    </div>
+    <div class="game-container">
+        <div class="status" id="status">Dark's Turn</div>
+        <div class="board-container" id="board"></div>
+    </div>
+    <script>
+        const boardSize = 8;
+        const board = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        let currentPlayer = 'dark';
+        let selectedPiece = null;
+
+        const pieces = [];
+        createBoard();
+
+        document.getElementById('themeToggle').addEventListener('change', (e) => {
+            const theme = e.target.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+
+        // Set initial theme
+        const savedTheme = localStorage.getItem('theme') || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeToggle').checked = savedTheme === 'dark';
+
+        function createBoard() {
+            for (let row = 0; row < boardSize; row++) {
+                for (let col = 0; col < boardSize; col++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+
+                    if ((row + col) % 2 === 1 && (row < 3 || row > 4)) {
+                        const piece = document.createElement('div');
+                        piece.className = `piece ${row < 3 ? 'dark-piece' : 'light-piece'}`;
+                        pieces.push({ element: piece, row, col, isKing: false });
+                        piece.addEventListener('click', () => selectPiece(piece));
+                        square.appendChild(piece);
+                    }
+
+                    square.addEventListener('click', () => movePiece(square));
+                    board.appendChild(square);
+                }
+            }
+            updateStatus();
+        }
+
+        function selectPiece(piece) {
+            if (!piece.classList.contains(`${currentPlayer}-piece`)) return;
+
+            clearHighlights();
+            selectedPiece = pieces.find(p => p.element === piece);
+            highlightMoves(selectedPiece);
+        }
+
+        function getValidMoves(piece) {
+            const moves = [];
+            const directions = piece.isKing
+                ? [[-1, -1], [-1, 1], [1, -1], [1, 1]]
+                : currentPlayer === 'dark'
+                    ? [[1, -1], [1, 1]]
+                    : [[-1, -1], [-1, 1]];
+
+            directions.forEach(([dr, dc]) => {
+                // Check for regular moves
+                const moveRow = piece.row + dr;
+                const moveCol = piece.col + dc;
+                if (isInBounds(moveRow, moveCol)) {
+                    const targetSquare = getSquare(moveRow, moveCol);
+                    if (!targetSquare.firstChild) {
+                        moves.push({ row: moveRow, col: moveCol });
+                    }
+                }
+
+                // Check for jumps
+                const jumpRow = piece.row + (dr * 2);
+                const jumpCol = piece.col + (dc * 2);
+                const intermediateRow = piece.row + dr;
+                const intermediateCol = piece.col + dc;
+
+                if (isInBounds(jumpRow, jumpCol)) {
+                    const intermediateSquare = getSquare(intermediateRow, intermediateCol);
+                    const targetSquare = getSquare(jumpRow, jumpCol);
+
+                    if (intermediateSquare.firstChild &&
+                        intermediateSquare.firstChild.classList.contains(
+                            `${currentPlayer === 'dark' ? 'light' : 'dark'}-piece`
+                        ) &&
+                        !targetSquare.firstChild) {
+                        moves.push({
+                            row: jumpRow,
+                            col: jumpCol,
+                            capture: { row: intermediateRow, col: intermediateCol }
+                        });
+                    }
+                }
+            });
+
+            return moves;
+        }
+
+        function highlightMoves(piece) {
+            const moves = getValidMoves(piece);
+            moves.forEach(({ row, col }) => {
+                getSquare(row, col).classList.add('highlight');
+            });
+        }
+
+        function movePiece(square) {
+            if (!selectedPiece || !square.classList.contains('highlight')) return;
+
+            const targetRow = parseInt(square.dataset.row);
+            const targetCol = parseInt(square.dataset.col);
+
+            const moves = getValidMoves(selectedPiece);
+            const move = moves.find(m => m.row === targetRow && m.col === targetCol);
+
+            if (!move) return;
+
+            if (move.capture) {
+                removePiece(move.capture);
+            }
+
+            const piece = selectedPiece.element;
+            getSquare(selectedPiece.row, selectedPiece.col).removeChild(piece);
+            square.appendChild(piece);
+
+            selectedPiece.row = targetRow;
+            selectedPiece.col = targetCol;
+
+            checkPromotion(selectedPiece);
+            clearHighlights();
+            selectedPiece = null;
+            currentPlayer = currentPlayer === 'dark' ? 'light' : 'dark';
+            updateStatus();
+            checkGameOver();
+        }
+
+        function checkGameOver() {
+            const currentPieces = pieces.filter(p => 
+                p.element.classList.contains(`${currentPlayer}-piece`)
+            );
+
+            if (currentPieces.length === 0) {
+                const winner = currentPlayer === 'dark' ? 'Light' : 'Dark';
+                statusElement.textContent = `${winner} Wins!`;
+                return true;
+            }
+
+            const hasValidMove = currentPieces.some(piece => 
+                getValidMoves(piece).length > 0
+            );
+
+            if (!hasValidMove) {
+                const winner = currentPlayer === 'dark' ? 'Light' : 'Dark';
+                statusElement.textContent = `${winner} Wins! - No moves available`;
+                return true;
+            }
+
+            return false;
+        }
+
+        function updateStatus() {
+            const playerText = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
+            statusElement.textContent = `${playerText}'s Turn`;
+        }
+
+        function removePiece({ row, col }) {
+            const square = getSquare(row, col);
+            const piece = square.firstChild;
+            if (piece) {
+                square.removeChild(piece);
+                const index = pieces.findIndex(p => p.element === piece);
+                if (index !== -1) pieces.splice(index, 1);
+            }
+        }
+
+        function checkPromotion(piece) {
+            if ((piece.row === 0 && piece.element.classList.contains('light-piece')) ||
+                (piece.row === boardSize - 1 && piece.element.classList.contains('dark-piece'))) {
+                piece.isKing = true;
+                piece.element.classList.add('king');
+            }
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.highlight').forEach(square => 
+                square.classList.remove('highlight')
+            );
+        }
+
+        function getSquare(row, col) {
+            return document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+        }
+
+        function isInBounds(row, col) {
+            return row >= 0 && row < boardSize && col >= 0 && col < boardSize;
+        }
+    </script>
+</body>
+</html>
